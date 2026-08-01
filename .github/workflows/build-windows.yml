@@ -33,6 +33,7 @@ jobs:
           New-Item -ItemType Directory -Force "dist/EscapeRoomMaster/media/images"
           "Drop your escape_rooms.db file into this folder. The app will load it automatically." | Out-File -FilePath "dist/EscapeRoomMaster/data/PUT_DATABASE_HERE.txt" -Encoding utf8
           "Put videos in media/videos, audio in media/audio, images in media/images." | Out-File -FilePath "dist/EscapeRoomMaster/media/PUT_MEDIA_FILES_HERE.txt" -Encoding utf8
+          "build-${{ github.run_number }}" | Out-File -FilePath "dist/EscapeRoomMaster/version.txt" -Encoding utf8 -NoNewline
 
       - name: Zip the app folder
         shell: pwsh

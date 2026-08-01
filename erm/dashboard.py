@@ -2,7 +2,7 @@
 points into the live Control Panel and the room editor.
 """
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QStackedLayout,
@@ -26,7 +27,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from erm import database
+from erm import database, updater
 from erm.constants import TIME_LIMIT_OPTIONS_MINUTES
 from erm.control_panel import ControlPanelWindow
 from erm.room_editor import RoomEditorDialog
@@ -34,6 +35,142 @@ from erm.theme import DASHBOARD_STYLE
 
 CARD_WIDTH = 280
 CARD_SPACING = 16
+
+
+class _DownloadThread(QThread):
+    progress = pyqtSignal(int, int)   # bytes_done, total
+    finished = pyqtSignal(str)        # zip path on success
+    error = pyqtSignal(str)
+
+    def __init__(self, url: str, tag: str):
+        super().__init__()
+        self.url = url
+        self.tag = tag
+        self._zip_path = None
+
+    def run(self):
+        try:
+            from pathlib import Path
+            path = updater.download_update(self.url, lambda d, t: self.progress.emit(d, t))
+            self._zip_path = path
+            self.finished.emit(str(path))
+        except Exception as exc:
+            self.error.emit(str(exc))
+
+
+class _UpdateDialog(QDialog):
+    """Checks for updates, shows progress, and triggers the install."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("App Update")
+        self.setModal(True)
+        self.setFixedSize(460, 230)
+        self._thread = None
+        self._zip_path = None
+        self._tag = None
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(12)
+
+        self._title_lbl = QLabel("Checking for updates…")
+        self._title_lbl.setStyleSheet("font-size: 15px; font-weight: bold;")
+        layout.addWidget(self._title_lbl)
+
+        self._status_lbl = QLabel(f"Current version: {updater.current_version()}")
+        self._status_lbl.setWordWrap(True)
+        self._status_lbl.setStyleSheet("color: #9090A0;")
+        layout.addWidget(self._status_lbl)
+
+        self._progress = QProgressBar()
+        self._progress.setRange(0, 100)
+        self._progress.hide()
+        layout.addWidget(self._progress)
+
+        layout.addStretch()
+
+        btn_row = QHBoxLayout()
+        self._cancel_btn = QPushButton("Close")
+        self._cancel_btn.clicked.connect(self.reject)
+        btn_row.addWidget(self._cancel_btn)
+        btn_row.addStretch()
+        self._action_btn = QPushButton("Download & Install")
+        self._action_btn.setObjectName("primaryButton")
+        self._action_btn.setEnabled(False)
+        self._action_btn.clicked.connect(self._on_install)
+        btn_row.addWidget(self._action_btn)
+        layout.addLayout(btn_row)
+
+        # Kick off the check immediately
+        self._check()
+
+    def _check(self):
+        try:
+            tag, url, name = updater.get_latest_release()
+            current = updater.current_version()
+            self._tag = tag
+            self._url = url
+            if current == "dev":
+                self._title_lbl.setText("Running in dev mode")
+                self._status_lbl.setText(f"Latest release: {name} ({tag})\nUpdates only apply to the packaged exe.")
+            elif tag == current:
+                self._title_lbl.setText("You're up to date!")
+                self._status_lbl.setText(f"Version: {current}")
+            else:
+                self._title_lbl.setText("Update available!")
+                self._status_lbl.setText(f"Current: {current}   →   Latest: {tag} ({name})")
+                self._action_btn.setEnabled(True)
+        except Exception as exc:
+            self._title_lbl.setText("Could not check for updates")
+            self._status_lbl.setText(str(exc))
+
+    def _on_install(self):
+        self._action_btn.setEnabled(False)
+        self._action_btn.setText("Downloading…")
+        self._progress.show()
+        self._progress.setValue(0)
+        self.setFixedSize(460, 260)
+
+        self._thread = _DownloadThread(self._url, self._tag)
+        self._thread.progress.connect(self._on_progress)
+        self._thread.finished.connect(self._on_downloaded)
+        self._thread.error.connect(self._on_error)
+        self._thread.start()
+
+    def _on_progress(self, done: int, total: int):
+        if total > 0:
+            self._progress.setValue(int(done / total * 100))
+        mb = done / 1_048_576
+        self._status_lbl.setText(f"Downloading… {mb:.1f} MB")
+
+    def _on_downloaded(self, zip_path: str):
+        from pathlib import Path
+        self._zip_path = Path(zip_path)
+        self._title_lbl.setText("Ready to install")
+        self._status_lbl.setText("The app will restart automatically to apply the update.\nYour database and settings will be kept.")
+        self._progress.setValue(100)
+        self._action_btn.setText("Install & Restart")
+        self._action_btn.clicked.disconnect()
+        self._action_btn.clicked.connect(self._on_apply)
+        self._action_btn.setEnabled(True)
+
+    def _on_apply(self):
+        try:
+            updater.install_update(self._zip_path, self._tag)
+        except Exception as exc:
+            QMessageBox.critical(self, "Update failed", str(exc))
+            return
+        # Quit the app — the bat script will relaunch it
+        from PyQt6.QtWidgets import QApplication
+        QApplication.quit()
+
+    def _on_error(self, msg: str):
+        self._title_lbl.setText("Download failed")
+        self._status_lbl.setText(msg)
+        self._action_btn.setText("Download & Install")
+        self._action_btn.setEnabled(True)
+        self._progress.hide()
 
 
 def _win_rate_text(room) -> str:
@@ -214,6 +351,11 @@ class MainDashboardWindow(QMainWindow):
         self.view_toggle_button.clicked.connect(self._toggle_view)
         top_row.addWidget(self.view_toggle_button)
 
+        self.update_button = QPushButton("Check for Update")
+        self.update_button.setObjectName("secondaryButton")
+        self.update_button.clicked.connect(self._on_check_update)
+        top_row.addWidget(self.update_button)
+
         self.create_room_button = QPushButton("Create Room")
         self.create_room_button.setObjectName("primaryButton")
         self.create_room_button.clicked.connect(self.create_room)
@@ -352,6 +494,10 @@ class MainDashboardWindow(QMainWindow):
     # ------------------------------------------------------------------
     # CRUD actions
     # ------------------------------------------------------------------
+
+    def _on_check_update(self) -> None:
+        dlg = _UpdateDialog(self)
+        dlg.exec()
 
     def create_room(self) -> None:
         dialog = NewRoomDialog(self)
