@@ -321,7 +321,6 @@ class MainDashboardWindow(QMainWindow):
 
         self.active_control_panels: dict[int, ControlPanelWindow] = {}
         self._rooms_cache: list = []
-        self._sort_mode = "Date Created"
         self._table_view = False
 
         self._build_ui()
@@ -339,12 +338,6 @@ class MainDashboardWindow(QMainWindow):
         title.setObjectName("pageTitle")
         top_row.addWidget(title)
         top_row.addStretch(1)
-
-        top_row.addWidget(QLabel("Sort by:"))
-        self.sort_combo = QComboBox()
-        self.sort_combo.addItems(["Date Created", "Name", "Win Rate"])
-        self.sort_combo.currentTextChanged.connect(self._on_sort_changed)
-        top_row.addWidget(self.sort_combo)
 
         self.view_toggle_button = QPushButton("Switch to Table View")
         self.view_toggle_button.setObjectName("secondaryButton")
@@ -403,15 +396,7 @@ class MainDashboardWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _sorted_rooms(self) -> list:
-        rooms = database.list_rooms()
-        if self._sort_mode == "Name":
-            return sorted(rooms, key=lambda r: r.name.lower())
-        if self._sort_mode == "Win Rate":
-            def rate(r):
-                total = r.wins + r.losses
-                return (r.wins / total) if total else -1.0
-            return sorted(rooms, key=rate, reverse=True)
-        return sorted(rooms, key=lambda r: r.id)
+        return sorted(database.list_rooms(), key=lambda r: r.id)
 
     def refresh_rooms(self) -> None:
         self._rooms_cache = self._sorted_rooms()
@@ -478,9 +463,6 @@ class MainDashboardWindow(QMainWindow):
     # Top bar actions
     # ------------------------------------------------------------------
 
-    def _on_sort_changed(self, text: str) -> None:
-        self._sort_mode = text
-        self.refresh_rooms()
 
     def _toggle_view(self) -> None:
         self._table_view = not self._table_view
