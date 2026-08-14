@@ -905,7 +905,7 @@ class ControlPanelWindow(QMainWindow):
         self.player_preview_label.setStyleSheet(
             "background-color: #0D1019; border: 1px solid #2E3648; border-radius: 4px; color: #5A6178; font-size: 11px;"
         )
-        self.player_preview_label.setMinimumHeight(130)
+        self.player_preview_label.setFixedHeight(160)
         content_layout.addWidget(self.player_preview_label)
 
         content_layout.addStretch(1)
@@ -1392,8 +1392,7 @@ class ControlPanelWindow(QMainWindow):
         if px.isNull():
             return
         scaled = px.scaled(
-            self.player_preview_label.width(),
-            self.player_preview_label.height(),
+            320, 160,  # fixed max — never read label size or the layout grows forever
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
