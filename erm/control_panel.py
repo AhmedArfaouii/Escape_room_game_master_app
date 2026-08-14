@@ -44,6 +44,16 @@ from erm.widgets.lock_button import ClueLockButton
 from erm.widgets.rating import RatingDots
 
 
+class _NoZoomScrollArea(QScrollArea):
+    """QScrollArea that ignores Ctrl+wheel so the layout cannot be accidentally zoomed."""
+
+    def wheelEvent(self, event):
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            event.ignore()
+        else:
+            super().wheelEvent(event)
+
+
 class _FeedDelegate(QStyledItemDelegate):
     """Word-wrapping delegate for the message feed list."""
     _V_PAD = 10
@@ -687,7 +697,7 @@ class ControlPanelWindow(QMainWindow):
         outer.addWidget(header)
 
         # Vertically scrollable wrapper so all three sections are reachable
-        page_scroll = QScrollArea()
+        page_scroll = _NoZoomScrollArea()
         page_scroll.setWidgetResizable(True)
         page_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         page_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -757,7 +767,7 @@ class ControlPanelWindow(QMainWindow):
         self.video_strips_layout.setSpacing(16)
         self.video_strips_layout.addStretch(1)
 
-        self.video_strips_scroll = QScrollArea()
+        self.video_strips_scroll = _NoZoomScrollArea()
         self.video_strips_scroll.setWidgetResizable(True)
         self.video_strips_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.video_strips_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -787,7 +797,7 @@ class ControlPanelWindow(QMainWindow):
         title_label.setObjectName("mixerSectionTitle")
         card_layout.addWidget(title_label)
 
-        scroll = QScrollArea()
+        scroll = _NoZoomScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -900,7 +910,7 @@ class ControlPanelWindow(QMainWindow):
 
         content_layout.addStretch(1)
 
-        controls_scroll = QScrollArea()
+        controls_scroll = _NoZoomScrollArea()
         controls_scroll.setWidgetResizable(True)
         controls_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         controls_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)

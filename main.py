@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 
@@ -33,6 +34,14 @@ def main() -> None:
     _load_dotenv()
     database.init_db()
     audio.ensure_alert_sound()
+
+    # Prevent Qt from rescaling the UI when Windows display DPI changes
+    # (e.g. dragging to a different monitor or Windows auto-adjusting scale).
+    # Floor rounding keeps the scale factor stable instead of jumping.
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.Floor
+    )
+    os.environ.setdefault("QT_SCALE_FACTOR", "1")
 
     app = QApplication(sys.argv)
     app.setStyle("Fusion")  # cross-platform style that respects custom CSS on Windows
