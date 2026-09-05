@@ -42,7 +42,7 @@ MUSIC_FADE_MS = 600
 
 # The message box shrinks its font (down to this size) before it accepts
 # any clipping, so very long messages still fit on screen.
-MESSAGE_MIN_FONT_PX = 18
+MESSAGE_MIN_FONT_PX = 24
 MESSAGE_FONT_STEP_PX = 2
 
 

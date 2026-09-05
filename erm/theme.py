@@ -748,7 +748,7 @@ QLabel#playerTimeUp {
 QLabel#playerMessage {
     background-color: rgba(19, 19, 22, 235);
     color: #F0EEE9;
-    font-size: 46px;
+    font-size: 60px;
     font-weight: 700;
     font-family: "Segoe UI Variable", "Segoe UI", "Arial", sans-serif;
     padding: 32px 44px;
