@@ -716,31 +716,31 @@ QWidget#playerClueStrip {
 }
 
 QLabel#playerTimer {
-    font-size: 138px;
+    font-size: 207px;
     font-weight: 700;
-    font-family: "Impact", "DejaVu Sans Mono", "Consolas", monospace;
+    font-family: "Impact", "Anton", "DejaVu Sans Mono", "Consolas", monospace;
     color: #F0EEE9;
 }
 
 QLabel#playerTimerCaption {
-    font-size: 32px;
+    font-size: 48px;
     font-weight: 500;
-    letter-spacing: 4px;
+    letter-spacing: 6px;
     color: #8A8896;
 }
 
 QLabel#playerTimerCompact {
     background-color: rgba(30, 28, 24, 230);
     color: #F0EEE9;
-    font-size: 46px;
+    font-size: 69px;
     font-weight: 700;
-    font-family: "Impact", "DejaVu Sans Mono", "Consolas", monospace;
-    padding: 10px 26px;
-    border-radius: 14px;
+    font-family: "Impact", "Anton", "DejaVu Sans Mono", "Consolas", monospace;
+    padding: 14px 36px;
+    border-radius: 18px;
 }
 
 QLabel#playerTimeUp {
-    font-size: 74px;
+    font-size: 111px;
     font-weight: 700;
     color: #F87171;
 }
@@ -748,10 +748,10 @@ QLabel#playerTimeUp {
 QLabel#playerMessage {
     background-color: rgba(19, 19, 22, 235);
     color: #F0EEE9;
-    font-size: 60px;
+    font-size: 90px;
     font-weight: 700;
     font-family: "Segoe UI Variable", "Segoe UI", "Arial", sans-serif;
-    padding: 32px 44px;
-    border-radius: 20px;
+    padding: 40px 56px;
+    border-radius: 26px;
 }
 """
