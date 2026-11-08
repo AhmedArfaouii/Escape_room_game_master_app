@@ -30,11 +30,12 @@ _IMPACT_LOADED = False
 
 
 def _load_impact_font() -> None:
-    """Load Impact from the bundled assets if present; falls back to system Impact."""
+    """Register the bundled Anton font (open-licensed, Impact look-alike).
+    System Impact is still preferred where installed; Anton is the fallback."""
     global _IMPACT_LOADED
     if _IMPACT_LOADED:
         return
-    font_path = Path(__file__).parent.parent / "assets" / "fonts" / "impact.ttf"
+    font_path = Path(__file__).parent.parent / "assets" / "fonts" / "Anton-Regular.ttf"
     if font_path.exists():
         QFontDatabase.addApplicationFont(str(font_path))
     _IMPACT_LOADED = True
@@ -321,7 +322,7 @@ class PlayerWindow(QWidget):
         Sizes itself via QFontMetrics so it never disturbs the normal message cache."""
         self.message_label.setStyleSheet(
             f"QLabel#playerMessage {{"
-            f" font-family: 'Impact', 'Arial Black', sans-serif;"
+            f" font-family: 'Impact', 'Anton', 'Arial Black', sans-serif;"
             f" font-size: 150px;"
             f" font-weight: 900;"
             f" color: {color};"

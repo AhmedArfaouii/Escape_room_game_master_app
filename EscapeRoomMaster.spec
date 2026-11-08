@@ -25,7 +25,7 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=_extra_bins + _httpx_b + _httpcore_b + _certifi_b,
-    datas=_httpx_d + _httpcore_d + _certifi_d,
+    datas=_httpx_d + _httpcore_d + _certifi_d + [("assets/fonts", "assets/fonts")],
     hiddenimports=[
         # PyQt6 multimedia backend (Windows Media Foundation)
         "PyQt6.QtMultimedia",
